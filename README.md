@@ -1,15 +1,32 @@
-# FeatureFlag Manager
+# Feature Flag Manager
 
 A full-stack feature flag management system with targeting rules, percentage rollouts, and real-time analytics.
 
+## What it does
+
+Control feature releases without deploying code. Turn features on/off instantly, roll out to a percentage of users, or target specific segments like beta testers or premium customers. Track how flags perform with built-in analytics.
+
+## Tech Stack
+
+**Backend**
+- Java 17 + Spring Boot 3.2
+- PostgreSQL for flag storage
+- Redis for fast lookups
+- Flyway migrations
+
+**Frontend**
+- React 18 with TypeScript
+- Tailwind CSS
+- Recharts for analytics
+
 ## Features
 
-- **Flag Management**: Create, update, enable/disable feature flags
-- **Targeting Rules**: Target specific users by ID, email domain, or country
-- **Percentage Rollouts**: Gradual rollouts with deterministic hashing
-- **Real-time Analytics**: Track flag evaluations with time-series data
-- **Flag Tester**: Test flag evaluation for any user context
-- **Redis Caching**: Fast flag lookups with automatic cache refresh
+- **Instant Toggles**: Enable/disable features without deploys
+- **Targeting Rules**: Target by user ID, email domain, or country
+- **Percentage Rollouts**: Gradual rollouts with consistent user assignment
+- **Real-time Analytics**: Track evaluation counts over time
+- **Flag Tester**: Test any user context before going live
+- **Redis Caching**: Sub-millisecond flag lookups
 
 ## Architecture
 
@@ -27,104 +44,65 @@ A full-stack feature flag management system with targeting rules, percentage rol
             └─────────────┘           └─────────────┘
 ```
 
-## Tech Stack
+## Getting Started
 
-### Backend
-- Java 21, Spring Boot 3.2
-- PostgreSQL 16 with Flyway migrations
-- Redis with Redisson for caching
-- JPA/Hibernate
-
-### Frontend
-- React 18 with TypeScript
-- Tailwind CSS
-- Recharts for analytics
-- React Router, Axios
-
-## Quick Start
-
-### Development
+### Quick Start with Docker
 
 ```bash
-# Start PostgreSQL and Redis
+docker-compose up -d
+```
+
+### Development Setup
+
+```bash
+# Start databases
 docker-compose -f docker-compose.dev.yml up -d
 
-# Start backend
+# Run backend
 cd backend
 ./mvnw spring-boot:run
 
-# Start frontend (in another terminal)
+# Run frontend
 cd frontend
 npm install
 npm run dev
 ```
 
-### Production
-
-```bash
-docker-compose up --build -d
-```
-
-## API Endpoints
+## API Reference
 
 ### Flags
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/flags` | Create flag |
 | GET | `/api/flags` | List all flags |
-| GET | `/api/flags/{id}` | Get flag details |
-| PUT | `/api/flags/{id}` | Update flag |
-| PATCH | `/api/flags/{id}/toggle` | Toggle flag on/off |
-| DELETE | `/api/flags/{id}` | Delete flag |
+| POST | `/api/flags` | Create a flag |
+| PUT | `/api/flags/{id}` | Update a flag |
+| PATCH | `/api/flags/{id}/toggle` | Toggle on/off |
+| DELETE | `/api/flags/{id}` | Delete a flag |
 
 ### Rules
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/api/flags/{id}/rules` | Add targeting rule |
-| GET | `/api/flags/{id}/rules` | List rules |
-| PATCH | `/api/flags/rules/{id}/toggle` | Toggle rule |
-| DELETE | `/api/flags/rules/{id}` | Delete rule |
+| DELETE | `/api/flags/rules/{id}` | Remove rule |
 
 ### Evaluation
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/flags/evaluate` | Evaluate all flags for user |
-| GET | `/api/flags/evaluate?userId=X` | Quick evaluation |
+| POST | `/api/flags/evaluate` | Evaluate flags for user |
 
-### Analytics
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/flags/{id}/analytics` | Get flag analytics |
-
-## Usage Examples
-
-### Create a Feature Flag
+### Create a Flag
 
 ```bash
 curl -X POST http://localhost:8080/api/flags \
   -H "Content-Type: application/json" \
   -d '{
     "name": "new_checkout",
-    "description": "New checkout flow with one-click purchase",
+    "description": "New checkout flow",
     "enabled": true,
     "rolloutPercentage": 25
-  }'
-```
-
-### Add Targeting Rule
-
-```bash
-curl -X POST http://localhost:8080/api/flags/{flagId}/rules \
-  -H "Content-Type: application/json" \
-  -d '{
-    "ruleType": "EMAIL_DOMAIN",
-    "ruleValue": "@company.com",
-    "enabled": true,
-    "priority": 10
   }'
 ```
 
@@ -135,7 +113,7 @@ curl -X POST http://localhost:8080/api/flags/evaluate \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "user123",
-    "userEmail": "test@company.com",
+    "userEmail": "dev@company.com",
     "country": "US"
   }'
 ```
@@ -157,37 +135,39 @@ Response:
 }
 ```
 
-## Evaluation Logic
+## How Evaluation Works
 
-```
-1. If flag is globally disabled → return false
+1. Check if flag is globally enabled
+2. Check targeting rules in priority order
+3. Fall back to percentage rollout (hash-based for consistency)
 
-2. Check targeting rules (in priority order):
-   - USER_ID: exact match
-   - EMAIL_DOMAIN: suffix match (e.g., @company.com)
-   - EMAIL_EXACT: exact email match
-   - COUNTRY: exact country code match
-   → If any rule matches → return that rule's result
-
-3. Fall back to percentage rollout:
-   - hash = abs((flagName + ":" + userId).hashCode())
-   - bucket = hash % 100
-   - return bucket < rolloutPercentage
-```
-
-The hash-based rollout ensures:
-- Same user always gets same result for same flag
-- Consistent experience across sessions
-- No database lookup needed for rollout calculation
+The same user always gets the same result for the same flag - no randomness between sessions.
 
 ## Rule Types
 
 | Type | Description | Example |
 |------|-------------|---------|
-| USER_ID | Exact user ID match | `user123` |
-| EMAIL_DOMAIN | Email suffix match | `@google.com` |
-| EMAIL_EXACT | Exact email match | `admin@company.com` |
-| COUNTRY | Country code match | `US` |
+| USER_ID | Exact user match | `user123` |
+| EMAIL_DOMAIN | Email suffix | `@company.com` |
+| EMAIL_EXACT | Exact email | `admin@company.com` |
+| COUNTRY | Country code | `US` |
+
+## Project Structure
+
+```
+featureflag-manager/
+├── backend/
+│   └── src/main/java/com/featureflag/
+│       ├── controller/
+│       ├── service/
+│       ├── entity/
+│       └── repository/
+├── frontend/
+│   └── src/
+│       ├── components/
+│       └── api/
+└── docker-compose.yml
+```
 
 ## License
 
