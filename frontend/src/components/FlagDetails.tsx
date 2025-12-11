@@ -11,6 +11,9 @@ import {
   Mail,
   Globe,
   Percent,
+  Pencil,
+  Check,
+  X,
 } from 'lucide-react';
 import {
   LineChart,
@@ -25,7 +28,7 @@ import {
   Cell,
 } from 'recharts';
 import type { Flag, Rule, Analytics, RuleType, CreateRuleRequest } from '../types';
-import { getFlag, toggleFlag, addRule, toggleRule, deleteRule, getAnalytics } from '../api/flagApi';
+import { getFlag, toggleFlag, updateFlag, addRule, toggleRule, deleteRule, getAnalytics } from '../api/flagApi';
 
 const RULE_TYPE_ICONS: Record<RuleType, typeof User> = {
   USER_ID: User,
@@ -57,6 +60,8 @@ export default function FlagDetails() {
     enabled: true,
     priority: 0,
   });
+  const [editingRollout, setEditingRollout] = useState(false);
+  const [newRollout, setNewRollout] = useState(0);
 
   useEffect(() => {
     if (id) {
@@ -87,6 +92,24 @@ export default function FlagDetails() {
       setFlag({ ...flag, enabled: !flag.enabled });
     } catch (err) {
       console.error('Failed to toggle flag:', err);
+    }
+  };
+
+  const handleUpdateRollout = async () => {
+    if (!flag) return;
+    try {
+      const updated = await updateFlag(flag.id, { rolloutPercentage: newRollout });
+      setFlag(updated);
+      setEditingRollout(false);
+    } catch (err) {
+      console.error('Failed to update rollout:', err);
+    }
+  };
+
+  const startEditingRollout = () => {
+    if (flag) {
+      setNewRollout(flag.rolloutPercentage);
+      setEditingRollout(true);
     }
   };
 
@@ -188,10 +211,44 @@ export default function FlagDetails() {
           </button>
         </div>
 
-        <div className="flex gap-6 mt-4 text-sm">
-          <div>
+        <div className="flex gap-6 mt-4 text-sm items-center">
+          <div className="flex items-center gap-2">
             <span className="text-gray-500">Rollout:</span>
-            <span className="ml-2 font-semibold text-blue-600">{flag.rolloutPercentage}%</span>
+            {editingRollout ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={newRollout}
+                  onChange={(e) => setNewRollout(Math.min(100, Math.max(0, Number(e.target.value))))}
+                  className="w-20 px-2 py-1 border border-gray-300 rounded text-sm font-semibold"
+                />
+                <span className="text-gray-500">%</span>
+                <button
+                  onClick={handleUpdateRollout}
+                  className="p-1 text-green-600 hover:bg-green-50 rounded"
+                >
+                  <Check className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setEditingRollout(false)}
+                  className="p-1 text-gray-400 hover:bg-gray-100 rounded"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1">
+                <span className="font-semibold text-blue-600">{flag.rolloutPercentage}%</span>
+                <button
+                  onClick={startEditingRollout}
+                  className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                >
+                  <Pencil className="w-3 h-3" />
+                </button>
+              </div>
+            )}
           </div>
           <div>
             <span className="text-gray-500">Created:</span>
