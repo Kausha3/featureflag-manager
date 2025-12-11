@@ -3,8 +3,8 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy package files (only package.json to get fresh install for linux-musl)
+COPY package.json ./
 RUN npm install
 
 # Copy source and build
