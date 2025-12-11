@@ -2,6 +2,8 @@
 
 A full-stack feature flag management system with targeting rules, percentage rollouts, and real-time analytics.
 
+**[Live Demo](https://glorious-consideration-production.up.railway.app/)** | **[GitHub](https://github.com/Kausha3/featureflag-manager)**
+
 ## What it does
 
 Control feature releases without deploying code. Turn features on/off instantly, roll out to a percentage of users, or target specific segments like beta testers or premium customers. Track how flags perform with built-in analytics.
@@ -9,7 +11,7 @@ Control feature releases without deploying code. Turn features on/off instantly,
 ## Tech Stack
 
 **Backend**
-- Java 17 + Spring Boot 3.2
+- Java 21 + Spring Boot 3.2
 - PostgreSQL for flag storage
 - Redis for fast lookups
 - Flyway migrations
