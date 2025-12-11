@@ -11,7 +11,18 @@ import type {
   ApiResponse,
 } from '../types';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+const getApiBase = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  // In production, use the backend URL from environment or default
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+    return 'https://featureflag-manager-production.up.railway.app/api';
+  }
+  return 'http://localhost:8080/api';
+};
+
+const API_BASE = getApiBase();
 
 const api = axios.create({
   baseURL: API_BASE,
