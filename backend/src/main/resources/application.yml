@@ -3,9 +3,9 @@ spring:
     name: featureflag-manager
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:featureflags}
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:postgres}
+    url: jdbc:postgresql://${PGHOST:localhost}:${PGPORT:5432}/${PGDATABASE:featureflags}
+    username: ${PGUSER:postgres}
+    password: ${PGPASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 20
@@ -34,8 +34,7 @@ server:
   port: ${SERVER_PORT:8080}
 
 redis:
-  address: redis://${REDIS_HOST:localhost}:${REDIS_PORT:6379}
-  password: ${REDIS_PASSWORD:}
+  address: ${REDIS_URL:redis://localhost:6379}
   database: ${REDIS_DATABASE:0}
 
 logging:
